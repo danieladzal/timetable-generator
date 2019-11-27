@@ -318,13 +318,19 @@ def main():
     matrix = columns are classrooms, rows are times, each field has index of the class or it is empty
     data = input data, contains classes, classrooms, teachers and groups
     """
+    
     filled = {}
     subjects_order = {}
     groups_empty_space = {}
     teachers_empty_space = {}
-    file = 'ulaz1.txt'
+    file = 'ulaz3.txt'
 
     data = load_data('test_files/' + file, teachers_empty_space, groups_empty_space, subjects_order)
+    print(len(data.classrooms)*60)
+    print(len(data.classes))
+    print(len(data.teachers))
+
+    
     matrix, free = set_up(len(data.classrooms))
     initial_population(data, matrix, free, filled, groups_empty_space, teachers_empty_space, subjects_order)
 
@@ -335,6 +341,7 @@ def main():
     print('STATISTICS')
     show_statistics(matrix, data, subjects_order, groups_empty_space, teachers_empty_space)
     simulated_hardening(matrix, data, free, filled, groups_empty_space, teachers_empty_space, subjects_order, file)
+    
 
 
 if __name__ == '__main__':

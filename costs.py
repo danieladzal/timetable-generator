@@ -207,3 +207,15 @@ def check_hard_constraints(matrix, data):
                                     overlaps += 1
 
     return overlaps
+
+
+def is_schedule_found(population, data):
+    """
+    If there's a schedule with no violation of hard constraints, return it's index in current population. Otherwise, return -1.
+    """
+    for schedule in population:
+        if check_hard_constraints(schedule.matrix, data) == 0:
+            return population.index(schedule)
+    return -1
+
+

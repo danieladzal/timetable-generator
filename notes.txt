@@ -1,0 +1,93 @@
+## Prouci sto radi i kako radi dosad
+## Pojedine skripte - koji im je cilj i namjena, kako su implementirane
+## Koji algoritam je implementiran (genetski ali koji, kakav, kako je implementiran???)
+## Sto se moze doraditi, popraviti? Koji elementi i uvjeti nisu postavljeni?
+## Zasto je koristen bas taj algoritam? Koja mu je slozenost? Koja bi bila slozenost nekog matematickog, sto je s pretragama? 
+## Mozemo li vizualizirati napredak algoritma? npr Nacrtati u matrici termin x ucionica koliko je konflikata u najboljem rasporedu svake generacije? ili nesto slicno...
+
+
+# Klase
+Class koja ima atribute: studijske grupe (to se moze poopciti na popis upisanih studenata - mozemo li u tom slucaju generirati svakom studentu individualni raspored??, nastavnik, tip (predavanje, lab...), predmet, trajanje i ucionice (sto su ucionice? kakvi su tu uvjeti????)
+Classroom koja ima atribute: tip (ovisno o opremi) i ime, mozda bi valjalo dodat kapacitet??? - onda treba dodat i broj upisanih studenata u svaki Class i dodat hard constraint 
+Data s atributima: classes, teachers, groups, classrooms CEMU OVO????!?!?!?!
+
+## sto je def _str_ (self) i def _ret_ (self)? ko su sad ti?
+
+# Troskovi - costs.py
+subjects_order_cost - gleda da u svim predmetima bude redoslijed P - V - L  soft constraint - uvjeti tipa bilo bi lijepo al prezivit cemo i bez toga, funkcija vraca postotak zadovoljenih uvjeta (ako predmet nema sve tipove nastave, one koje nemamo kodiramo s vremenom pocetka -1)
+
+empty_space_groups_cost - vraca total empty space, max empty space i average empty space za studijske grupe - gleda da svi gube sto manje vremena na kavama izmedu predavanja
+empty_space_teachers_cost - to isto i za nastavnike
+free_hour - trazi termin u tjednu kad su bas svi slobodni, trudi se da postoji takav jedan termin, ako ga ne nade vrati -1
+
+hard_constraints_cost - svaku ucionicu moze zauzimat max jedan sat u danom terminu, svaki prof moze imat max jedan predmet u terminu, isto za studijsku grupu i svaki sat se odrzava u jednoj od odgovarajucih ucionica - za svako krsenje bilo kojeg od ovih uvjeta dodajemo 1 na ukupni trošak
+
+check_hard_constraint - provjerava jesu li svi hard consovi zadovoljeni 
+
+## Pomocne funkcije - utils.py
+funkcije za ucitavanje podataka, ispis generiranog rasporeda itd...
+load_data  ucitava podatke iz ulaznog filea - vraca 4 strukture
+	classes - dictionary koji indeksira elemente klase Class ( ta klasa sadrži atribute -st. grupe, nastavnik, tip, predmet, trajanje, ucionice)
+	classrooms - dictionary s ucionicama key = index, value = classroom(name, type)
+	teachers - dictionary key = ime, value = index
+	groups - dictionary - key = ime grupe, value = index
+	u ucitanim podacima pise koji tip ucionice odgovara pojedinom classu, ovdje se to zamjenjuje indeksima ucionica koje odgovaraju a indeksi su iz classrooms dicta,
+	isto tako se grupe zamjenjuju indeksima grupa iz groups
+
+set_up  inicijalizira matricu u koju sprema samo prazna polja, u nju cemo popunjavat raspored?
+		osim matrice, vraca dict free sa svim poljima matrice
+show_timetable printa matricu
+
+write_solution_to_file 
+show_statistics
+
+
+## scheduler
+
+#ovaj simulated hardening je u stvari fina optimizacija problema
+# stvar funkcionira na način da genetski algoritam sa generacijama i svime dode blizu globalnog maksimuma i onda ovaj sa simuliranjem kaljenja ??? se priblizava tom maksimumu
+# znaci genetski nam "osigura" da smo blizu globalnog optimuma (on moze skakat s jednog maksimuma na drugi ako ima vise lokalnih) i kad smo blizu tog globalnog maksimuma onda
+# mu se želimo fino približiti
+
+# u nasem slucaju zadovoljavamo hard constraints sa gen. algoritmom a onda finim prilagodavanjem pokusavamo zadovoljiti što više softova
+
+
+
+
+### Sto cu ja napraviti  #####
+
+Iskoristit cu podatke, ucitavanje podataka i postojece strukture. 
+Prepravila sam funkciju initial_population da umjesto matrice jednog rasporeda vraca populaciju s population_size rasporeda
+Taj population je u stvari lista objekata iz klase Schedule ciji su atributi filled (dict ciji su kljucevi objekti klase Class a vrijednosti su liste termina u kojima se odvija dani Class) i cost_hard_constraints (ukupni gubitak rasporeda).  
+
+
+Koristim dict filled a ne matricu jer se nadam da ce mi biti jednostavnije implementirati genetske operatore, a lako se pretvori u matricu (naravno i za to cu iskoristit postojeci kod)
+
+Sada treba implementirati genetski algoritam
+Operatori:
+	elitizam
+	selekcija
+	mutacija
+	crossing-over
+Implementirat odvojeno ove operatore i onda proucavat kako se algoritam snalazi ovisno o velicini populacije, vjerojatnosti mutacije, mjestu crossing-overa...
+
+
+Napravi skup podataka za razlicite izvedbe algoritma. kako radi za razlicite parametre na razlicitim pocetnim podacima. 
+u orangeu prouci dobivene podatke i odredi koji su najbolji parametri. šta mislis zasto?
+
+puno stablo mogucnosti ima 60xbr_ucionica povrh br_predmeta listova npr za ulaz2.txt to je 540 povrh 68 a to je reda velicine 10 na 87
+https://www.calculatorsoup.com/calculators/discretemathematics/combinations.php stranica za aproksimaciju faktorijela, binoma...
+ako odmah vodimo racuna koji predmeti mogu u koju ucionicu taj broj se dosta smanji ( nisan pogledala koliko)
+
+sve to probat na podacima: https://www.unitime.org/uct_datasets.php
+prokuzi kako se cita xml dokument!!!
+
+
+U netlogu napravit vizualizaciju koja ce nacrtat matricu termini x ucionice i bojat ovisno o broju konflikata (profesori, grupe...) i to crtat za najbolji kromosom iz svake generacije i vidit kako napreduje evolucija
+
+Probat napravit i neku vizualizaciju slicnu kao na: http://karstenahnert.com/gp/ samo ne interaktivnu al ovako neke veze...kako su se generacije popravljale i što je dovelo do toga (koji operatori - npr ova je zakljucila da mutacija ugl daje loše jedinke)
+treba u pythonu napravit strukturu usmjerenog grafa - cvorovi su jedinke - veze opisuju kako je od jedne jedinke doslo do druge (krizanje, mutacija, elitizam) s tim da netlogu šaljemo samo podatke o "dobroti" cvora i veze. onda ce netlogo razlicito bojat cvorove po dobroti i crtat veze medu njima koje ce bit obojane prema tome kojeg su tipa
+
+konacni cilj: uzicat pmf podatke!  i isprobat što se događa kad preopteretimo ucionice i umisto studijskih grupa stavimo studente (zbog izbornih predmeta i redoslijeda upisa...)
+
+zaboravit simulated hardening i soft constraintove

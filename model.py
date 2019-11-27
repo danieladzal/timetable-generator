@@ -36,3 +36,32 @@ class Data:
         self.teachers = teachers
         self.classes = classes
         self.classrooms = classrooms
+
+class Schedule:
+
+    def __init__(self, filled, num_classrooms):
+        self.filled = filled
+        self.cost_hard_constraints = 0
+        self.matrix = [[None for x in range(num_classrooms)] for y in range(60)]
+        self.elimination_prob = 0
+        self.cum_sum = 0
+        self.free = []
+
+    def fill_matrix(self):
+        for index, fields_list in self.filled.items():
+                for field in fields_list:
+                    self.matrix[field[0]][field[1]] = index
+    
+    def fill_free(self):
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                if self.matrix[i][j] is None:
+                    self.free.append((i, j))
+
+
+
+
+
+
+
+
