@@ -78,24 +78,6 @@ def initial_population(data, free, groups_empty_space, teachers_empty_space, sub
         """
     return population
 
-
-def insert_order(subjects_order, subject, group, type, start_time):
-    """
-    Inserts start time of the class for given subject, group and type of class.
-    """
-    times = subjects_order[(subject, group)]
-    if type == 'P':
-        times[0] = start_time
-    elif type == 'V':
-        times[1] = start_time
-    else:
-        times[2] = start_time
-    subjects_order[(subject, group)] = times
-
-
-
-
-
 def exchange_two(matrix, filled, ind1, ind2):
     """
     Changes places of two classes with the same duration in timetable matrix.
@@ -114,160 +96,6 @@ def exchange_two(matrix, filled, ind1, ind2):
     filled[ind2] = fields1
 
     return matrix
-
-
-def valid_teacher_group_row(matrix, data, index_class, row):
-    """
-    Returns if the class can be in that row because of possible teacher or groups overlaps.
-    """
-    c1 = data.classes[index_class]
-    for j in range(len(matrix[row])):
-        if matrix[row][j] is not None:
-            c2 = data.classes[matrix[row][j]]
-            # check teacher
-            if c1.teacher == c2.teacher:
-                return False
-            # check groups
-            for g in c2.groups:
-                if g in c1.groups:
-                    return False
-    return True
-
-
-def mutate_ideal_spot(matrix, data, ind_class, free, filled, groups_empty_space, teachers_empty_space, subjects_order):
-    """
-    Function that tries to find new fields in matrix for class index where the cost of the class is 0 (taken into
-    account only hard constraints). If optimal spot is found, the fields in matrix are replaced.
-    """
-
-    # find rows and fields in which the class is currently in
-    rows = []
-    fields = filled[ind_class]
-    for f in fields:
-        rows.append(f[0])
-
-    classs = data.classes[ind_class]
-    ind = 0
-    while True:
-        # ideal spot is not found, return from function
-        if ind >= len(free):
-            return
-        start_field = free[ind]
-
-        # check if class won't start one day and end on the next
-        start_time = start_field[0]
-        end_time = start_time + int(classs.duration) - 1
-        if start_time % 12 > end_time % 12:
-            ind += 1
-            continue
-
-        # check if new classroom is suitable
-        if start_field[1] not in classs.classrooms:
-            ind += 1
-            continue
-
-        # check if whole block can be taken for new class and possible overlaps with teachers and groups
-        found = True
-        for i in range(int(classs.duration)):
-            field = (i + start_time, start_field[1])
-            if field not in free or not valid_teacher_group_row(matrix, data, ind_class, field[0]):
-                found = False
-                ind += 1
-                break
-
-        if found:
-            # remove current class from filled dict and add it to free dict
-            filled.pop(ind_class, None)
-            for f in fields:
-                free.append((f[0], f[1]))
-                matrix[f[0]][f[1]] = None
-                # remove empty space of the group from old place of the class
-                for group_index in classs.groups:
-                    groups_empty_space[group_index].remove(f[0])
-                # remove teacher's empty space from old place of the class
-                teachers_empty_space[classs.teacher].remove(f[0])
-
-            # update order of the subjects and add empty space for each group
-            for group_index in classs.groups:
-                insert_order(subjects_order, classs.subject, group_index, classs.type, start_time)
-                for i in range(int(classs.duration)):
-                    groups_empty_space[group_index].append(i + start_time)
-
-            # add new term of the class to filled, remove those fields from free dict and insert new block in matrix
-            for i in range(int(classs.duration)):
-                filled.setdefault(ind_class, []).append((i + start_time, start_field[1]))
-                free.remove((i + start_time, start_field[1]))
-                matrix[i + start_time][start_field[1]] = ind_class
-                # add new empty space for teacher
-                teachers_empty_space[classs.teacher].append(i+start_time)
-            break
-
-
-def evolutionary_algorithm(matrix, data, free, filled, groups_empty_space, teachers_empty_space, subjects_order):
-    """
-    Evolutionary algorithm that tires to find schedule such that hard constraints are satisfied.
-    It uses (1+1) evolutionary strategy with Stifel's notation.
-    """
-    n = 3
-    sigma = 2
-    run_times = 5
-    max_stagnation = 200
-
-    for run in range(run_times):
-        print('Run {} | sigma = {}'.format(run + 1, sigma))
-
-        t = 0
-        stagnation = 0
-        cost_stats = 0
-        while stagnation < max_stagnation:
-
-            # check if optimal solution is found
-            loss_before, cost_classes, cost_teachers, cost_classrooms, cost_groups = hard_constraints_cost(matrix, data)
-            if loss_before == 0 and check_hard_constraints(matrix, data) == 0:
-                print('Found optimal solution: \n')
-                show_timetable(matrix)
-                break
-
-            # sort classes by their loss, [(loss, class index)]
-            costs_list = sorted(cost_classes.items(), key=itemgetter(1), reverse=True)
-
-            # 10*n
-            for i in range(len(costs_list) // 4):
-                # mutate one to its ideal spot
-                if random.uniform(0, 1) < sigma and costs_list[i][1] != 0:
-                    mutate_ideal_spot(matrix, data, costs_list[i][0], free, filled, groups_empty_space,
-                                      teachers_empty_space, subjects_order)
-                # else:
-                #     # exchange two who have the same duration
-                #     r = random.randrange(len(costs_list))
-                #     c1 = data.classes[costs_list[i][0]]
-                #     c2 = data.classes[costs_list[r][0]]
-                #     if r != i and costs_list[r][1] != 0 and costs_list[i][1] != 0 and c1.duration == c2.duration:
-                #         exchange_two(matrix, filled, costs_list[i][0], costs_list[r][0])
-
-            loss_after, _, _, _, _ = hard_constraints_cost(matrix, data)
-            if loss_after < loss_before:
-                stagnation = 0
-                cost_stats += 1
-            else:
-                stagnation += 1
-
-            t += 1
-            # Stifel for (1+1)-ES
-            if t >= 10*n and t % n == 0:
-                s = cost_stats
-                if s < 2*n:
-                    sigma *= 0.85
-                else:
-                    sigma /= 0.85
-                cost_stats = 0
-
-        print('Number of iterations: {} \nCost: {} \nTeachers cost: {} | Groups cost: {} | Classrooms cost:'
-              ' {}'.format(t, loss_after, cost_teachers, cost_groups, cost_classrooms))
-# check if optimal solution is found
-        loss_before, cost_classes, cost_teachers, cost_classrooms, cost_groups = hard_constraints_cost(matrix, data)
-        if loss_before == 0 and check_hard_constraints(matrix, data) == 0:
-            break
 
 
 ##### Moje funkcije ######
@@ -306,10 +134,6 @@ def eliminate_selected(population, m):
         for schedule in population:
             if r > population[population.index(schedule) - 1].cum_sum and r <= schedule.cum_sum:
                 population.remove(schedule) 
-
-
-
-
 
 # mutacija
 """
@@ -367,12 +191,6 @@ def mutate(population, m, data):
                     sch.fill_matrix()
                     sch.cost_hard_constraints, _, _, _, _ = hard_constraints_cost(sch.matrix, data)
 
-
-
-
-
-
-
 # crossing - over
 """
 Randomly choose two schedules from the population, radnomly choose place k to cut them and take first k classes from parent1 and the rest from parent2
@@ -397,16 +215,12 @@ def reproduce(population, m, data):
         child.cost_hard_constraints = total
         population.append(child)
 
-
-
 # genetski algoritam
-
 """
 def genetic_algorithm(initial_population, population_size):
     while(! postoji raspored s costom = 0):
         selektiraj bolje jedinke za reprodukciju()
         reprodukcijom stvori novu populaciju()
-
 """
 def genetic_algorithm(population, mutation_count, death_birth_rate, data):
     generation = 0
@@ -454,7 +268,7 @@ def main():
     subjects_order = {}
     groups_empty_space = {}
     teachers_empty_space = {}
-    file = 'ulaz3.txt'
+    file = 'ulaz1.txt'
 
     data = load_data('test_files/' + file, teachers_empty_space, groups_empty_space, subjects_order)
     
@@ -473,46 +287,9 @@ def main():
         total, _, _, _, _ = hard_constraints_cost(schedule.matrix, data)
         schedule.cost_hard_constraints = total
         #print(schedule.cost_hard_constraints)
-    write_statistics(data, population_size, mutation_count, death_birth_rate, -1)
-
-    """
-    eliminate_selected(population, 3)
-
-    print("After eliminating 3 schedules...")
-
-    for schedule in population:
-        schedule.fill_matrix()
-        show_timetable(schedule.matrix)
-        total, _, _, _, _ = hard_constraints_cost(schedule.matrix, data)
-        schedule.cost_hard_constraints = total
-        print(schedule.cost_hard_constraints)
-
-    reproduce(population, 2, len(data.classrooms), len(data.classes))
-    print("After adding 2 new schedules by reproduction...")
-
-    for schedule in population:
-        schedule.fill_matrix()
-        show_timetable(schedule.matrix)
-        total, _, _, _, _ = hard_constraints_cost(schedule.matrix, data)
-        schedule.cost_hard_constraints = total
-        print(schedule.cost_hard_constraints)
     
-    mutate(population, 1, len(data.classrooms), data.classes)
-    for schedule in population:
-        schedule.fill_matrix()
-        #show_timetable(schedule.matrix)
-        print(schedule.filled)
-        total, _, _, _, _ = hard_constraints_cost(schedule.matrix, data)
-        schedule.cost_hard_constraints = total
-        print(schedule.cost_hard_constraints)
-    """
-    # genetic_algorithm(population, mutation_count, death_birth_rate, data)
 
-    # evolutionary_algorithm(matrix, data, free, filled, groups_empty_space, teachers_empty_space, subjects_order)
-    # print('STATISTICS')
-    # show_statistics(matrix, data, subjects_order, groups_empty_space, teachers_empty_space)
-    # simulated_hardening(matrix, data, free, filled, groups_empty_space, teachers_empty_space, subjects_order, file)
-    
+    genetic_algorithm(population, mutation_count, death_birth_rate, data)
 
 
 if __name__ == '__main__':
