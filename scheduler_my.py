@@ -71,11 +71,9 @@ def initial_population(data, free, groups_empty_space, teachers_empty_space, sub
         if feasible:
             sch = Schedule(filled_temp, len(data.classrooms))
             population.append(sch)
-            print("initializing population...")
-        """
+            print("1 more done ")
         else:
-            count failures??
-        """
+            print("infeasible")
     return population
 
 def exchange_two(matrix, filled, ind1, ind2):
@@ -116,7 +114,7 @@ zapravo ne eliminiram nuzno najlosije jedinke ali najlosije jedinke imaju najman
 """
 def eliminate_selected(population, m):
     for i in range(m):
-        min_cost = population[1].cost_hard_constraints
+        min_cost = population[0].cost_hard_constraints
         sum_cost = 0
         cumulative_sum = 0
         for schedule in population:
@@ -126,14 +124,22 @@ def eliminate_selected(population, m):
         sum_cost = sum_cost - len(population)*min_cost
 
         for schedule in population:
-            schedule.elimination_prob = (schedule.cost_hard_constraints - min_cost) / sum_cost
-            cumulative_sum += (schedule.cost_hard_constraints - min_cost)
+            # schedule.elimination_prob = (schedule.cost_hard_constraints - min_cost) / sum_cost
+            cumulative_sum += schedule.cost_hard_constraints - min_cost
             schedule.cum_sum = cumulative_sum
-        r = random.random()*sum_cost
-
-        for schedule in population:
-            if r > population[population.index(schedule) - 1].cum_sum and r <= schedule.cum_sum:
-                population.remove(schedule) 
+        
+        if sum_cost > 1:
+            r = random.randrange(1, sum_cost)
+            for i in range(1, len(population)):
+                if r <= population[0].cum_sum:
+                    population.remove(population[0])
+                    break
+                elif r > population[i-1].cum_sum and r <= population[i].cum_sum:
+                    population.remove(population[i])
+                    break
+        else: 
+            r = random.randrange(len(population))           ## if all chromosomes have equal cost remove any...
+            population.remove(population[r])
 
 # mutacija
 """
@@ -268,7 +274,7 @@ def main():
     subjects_order = {}
     groups_empty_space = {}
     teachers_empty_space = {}
-    file = 'ulaz1.txt'
+    file = 'ulaz2_optereceni.txt'
 
     data = load_data('test_files/' + file, teachers_empty_space, groups_empty_space, subjects_order)
     
@@ -291,6 +297,6 @@ def main():
 
     genetic_algorithm(population, mutation_count, death_birth_rate, data)
 
-
+    
 if __name__ == '__main__':
     main()

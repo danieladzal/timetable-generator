@@ -85,9 +85,41 @@ prokuzi kako se cita xml dokument!!!
 
 U netlogu napravit vizualizaciju koja ce nacrtat matricu termini x ucionice i bojat ovisno o broju konflikata (profesori, grupe...) i to crtat za najbolji kromosom iz svake generacije i vidit kako napreduje evolucija
 
-Probat napravit i neku vizualizaciju slicnu kao na: http://karstenahnert.com/gp/ samo ne interaktivnu al ovako neke veze...kako su se generacije popravljale i što je dovelo do toga (koji operatori - npr ova je zakljucila da mutacija ugl daje loše jedinke)
+Probat napravit i neku vizualizaciju slicnu kao na: http://karstenahnert.com/gp/ samo ne interaktivnu al ovako neke veze...kako su se generacije popravljale i što je dovelo do toga (koji operatori - npr ova je zakljucila da mutacija ugl daje loše jedinke)  - nisan vise sigurna za tu ideju s obzirom na veliki broj generacija - iako to mozda moze ic paralelno sa stvaranjen generacija ?? 
 treba u pythonu napravit strukturu usmjerenog grafa - cvorovi su jedinke - veze opisuju kako je od jedne jedinke doslo do druge (krizanje, mutacija, elitizam) s tim da netlogu šaljemo samo podatke o "dobroti" cvora i veze. onda ce netlogo razlicito bojat cvorove po dobroti i crtat veze medu njima koje ce bit obojane prema tome kojeg su tipa
 
 konacni cilj: uzicat pmf podatke!  i isprobat što se događa kad preopteretimo ucionice i umisto studijskih grupa stavimo studente (zbog izbornih predmeta i redoslijeda upisa...)
 
 zaboravit simulated hardening i soft constraintove
+
+
+######## Podaci vezani za ulaze #########
+ulaz2 
+101 predmet u 5 ucionica - ukupno trajanje predmeta je 248 sati (u 5 ucionica x 60 sati tjedno to je 300 sati) to je oko 83% popunjenost ucionica 
+64 predmeta u 4 ucionice - ukupno trajanje predmeta je 156 sati (od mogucih 240) 65% popunjenost ovih ucionica 
+
+ulaz1
+19 predmeta tj 47 sati u 1 ucionicu
+45 predmeta tj 114 sati u 3 ucionice 
+2 predmeta tj 6 sati u jednoj uc
+1 predmet tj 2 sata u jednoj uc
+2 predmeta tj 6 sati u jednoj uc
+
+
+ulaz3
+68 predmeta tj 164 sata u 5 uc
+103 predmeta tj 252 sata u 5 uc
+6 predmeta tj 16 sati u 1
+3 predmeta tj 8 sati u 1
+10 predmeta tj 30 sati u 1
+
+u svim skupovima idu otprilike 3 predmeta po profesoru
+
+## popravi initial_population funkciju - mora nekako postat malo brza - moze li se ovaj deepcopy izbacit i te neke stvari...??
+## popravi funkciju za eliminacijsku selekciju da ne preracunava svima cumulative cost nego onima iza izbacenog
+
+## ako su ucionice zakrcene stvara se previse infeasible rasporeda - moze li se to rijesiti dodavanjem jedne "KOŠ" ucionice - npr da u nju mogu sva predavanja ali da strogo kažnjavam jedinke/rasporede koji upotrebljavaju tu ucionicu. mozda ce evolucija brze rijesit taj problem od random shufflanja
+
+
+
+
