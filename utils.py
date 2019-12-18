@@ -137,13 +137,14 @@ def show_timetable(matrix):
 
 ### funkcija koja ce mi zapisivati upotrebljene parametre i rjesenja u file da kasnije mogu provesti analizu i vidjeti koji parametri daju ucinkovitiji algoritam
 
-def write_statistics(data, population_size, mutation_count, death_rate, generation_num):
+def write_statistics(data, population_size, mutation_count, death_rate, generation_num, mut_type):
     """
-    number of classes| number of classrooms | number of teachers | number of groups | population size | mutation count | death/birth rate | number of generations to reach solution
+    number of classes| number of classrooms | number of teachers | number of groups | population size | mutation count | death/birth rate | 
+    number of generations to reach solution | mutation type (I - ideal spot, R - random spot)
     if solution not found, set number of generations to -1
     """
-    new_row = str(len(data.classes))+', '+str(len(data.classrooms))+', '+str(len(data.teachers))+', '+str(len(data.groups))+', '+str(population_size)+', '+str(mutation_count)+', '+str(death_rate)+', '+str(generation_num)
-    with open('statistics.csv', 'a') as fd:
+    new_row = str(len(data.classes))+', '+str(len(data.classrooms))+', '+str(len(data.teachers))+', '+str(len(data.groups))+', '+str(population_size)+', '+str(mutation_count)+', '+str(death_rate)+', '+str(generation_num)+','+str(mut_type)
+    with open('statistics_compare_mutations.csv', 'a') as fd:
         fd.write('\n')
         fd.write(new_row)
 
